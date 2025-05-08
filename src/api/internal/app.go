@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/nats-io/nats.go"
+	"api/internal/utils"
 )
 
 type App struct {
@@ -27,13 +27,13 @@ func NewApp(name string, version string) *App {
 }
 
 func (a *App) SetNatsContext(natsUrl string) error {
-	nats, err := nats.Connect(natsUrl)
-	a.SrvCtx = context.WithValue(a.SrvCtx, appContextKey("nats"), nats)
+	natsCtl, err := utils.NewNatsCtl(natsUrl)
+	a.SrvCtx = context.WithValue(a.SrvCtx, appContextKey("nats"), natsCtl)
 	return err
 }
 
-func (a *App) GetNatsConnection() *nats.Conn {
-	return a.SrvCtx.Value(appContextKey("nats")).(*nats.Conn)
+func (a *App) GetNatsConnection() *utils.NatsCtl {
+	return a.SrvCtx.Value(appContextKey("nats")).(*utils.NatsCtl)
 }
 
 func (a *App) StartApiServer(apiUrl string) {

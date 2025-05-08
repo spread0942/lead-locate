@@ -10,6 +10,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/nats-io/nats.go"
+	"api/internal/utils"
 )
 
 type GowlerInput struct {
@@ -27,11 +28,11 @@ type GowlerOutput struct {
 	} `json:"body"`
 }
 
-type GowlerPublish struct {
+type GowlerBodyRequest struct {
 	Website string `json:"website"`
 }
 
-func RegisterGowler(api huma.API, nats *nats.Conn) {
+func RegisterGowler(api huma.API, nats *utils.NatsCtl) {
 	huma.Register(api, huma.Operation{
 		OperationID: "gowler",
 		Summary:     "Crawler a website",
@@ -39,20 +40,17 @@ func RegisterGowler(api huma.API, nats *nats.Conn) {
 		Path:        "/gowler",
 	}, func(ctx context.Context, input *GowlerInput) (*GowlerOutput, error) {
 		resp := &GowlerOutput{}
-		mapsPublish := GowlerPublish{
+		body := GowlerBodyRequest{
 			Website: input.Website,
 		}
-		jMapsPublish, err := json.Marshal(mapsPublish)
-		if err != nil {
-			fmt.Println(err)
-		}
-		reply, err := nats.Request("gowler.request.gowler", jMapsPublish, 10*time.Minute)
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = json.Unmarshal(reply.Data, resp)
+		data, err := nats.Request("gowler.request.gowler", "gowler", body)
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+		}
+		jsonData, err := json.Marshal(data)
+		err = json.Unmarshal(jsonData, &resp)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal to GowlerOutput: %w", err)
 		}
 		return resp, nil
 	})
