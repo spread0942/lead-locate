@@ -6,9 +6,11 @@ import (
 	"fmt"
 
 	"github.com/nats-io/nats.go"
+
+	"gowler/internal/utils"
 )
 
-func RequestsHandler(nc *nats.Conn, serviceName string) {
+func RequestsHandler(nc *utils.NatsCtl, serviceName string) {
 	request := serviceName + ".request"
 	mapsRequest := request + ".maps"
 	nc.Subscribe(mapsRequest, func(msg *nats.Msg) {

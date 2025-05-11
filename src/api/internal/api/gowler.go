@@ -4,12 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
-	"time"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/nats-io/nats.go"
 	"api/internal/utils"
 )
 
