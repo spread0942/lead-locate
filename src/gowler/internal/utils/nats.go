@@ -3,10 +3,11 @@ package utils
 import (
 	"time"
 	"encoding/json"
+	"log"
 
 	"github.com/nats-io/nats.go"
 
-	"api/internal/utils/natsUtils"
+	"gowler/internal/utils/natsUtils"
 )
 
 type NatsCtl struct {
@@ -27,11 +28,21 @@ func NewNatsCtl(url string) (*NatsCtl, error) {
 		Timeout: 10*time.Minute,
 		client: nats,
 	}
+
+	// logs configuration
+	initLog()
+
 	return natsCtl, nil
 }
 
+// set up some log configuration
+func initLog() {
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+	log.Println("Logger initialized")
+}
+
 // handle the request and response
-func (nats *NatsCtl) Request(subj string, method string, body any) (any, error) {
+func (natsCtl *NatsCtl) Request(subj string, method string, body any) (any, error) {
 	// prepare the request
 	req := natsUtils.NatsRequest{
 		Method: method,
@@ -42,7 +53,7 @@ func (nats *NatsCtl) Request(subj string, method string, body any) (any, error) 
 	if err != nil {
 		return nil, err
 	}
-	reply, err := nats.client.Request(subj, data, nats.Timeout)
+	reply, err := natsCtl.client.Request(subj, data, natsCtl.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -56,4 +67,42 @@ func (nats *NatsCtl) Request(subj string, method string, body any) (any, error) 
 		return nil, resp.Error
 	}
 	return resp.Body, nil
+}
+
+func (natsCtl *NatsCtl) SubscribeHandler(serviceName string) {
+	subj := serviceName + ".request.maps"
+	natsCtl.client.Subscribe(subj, func(msg *nats.Msg) {
+		logSubscribe(subj, msg)
+
+		var request natsUtils.NatsRequest
+		if err := json.Unmarshal(msg.Data, &request); err != nil {
+			log.Println("Error unmarshalling message:", err)
+			return
+		}
+
+		rawBody, ok := request.Body.(json.RawMessage)
+		if !ok {
+			log.Println("Error: request.Body is not a valid JSON type")
+            return
+		}
+
+		var body natsUtils.GowlerBody
+		if err := json.Unmarshal(rawBody, &body); err != nil {
+			log.Println("Error unmarshalling request.Body into GowlerBody:", err)
+            return
+		}
+
+		requests.GetMaps(msg)
+	})
+
+	subj = serviceName + ".request.gowler"
+	natsCtl.client.Subscribe(subj, func(msg *nats.Msg) {
+		logSubscribe(subj, msg)
+		requests.GowlerIt(msg)
+	})
+}
+
+func logSubscribe(subj string, msg *nats.Msg) {
+	log.Println("Subscribe:", subj)
+	log.Println("Received message:", string(msg.Data))
 }

@@ -18,3 +18,9 @@ type NatsResponse struct {
 	Body any
 	Error error
 }
+
+// SUBSCRIBES ****************************************************************
+
+type GowlerBody struct {
+	Website string `json:"website"`
+}
