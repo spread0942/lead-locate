@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"gowler/internal/utils"
+	"gowler/internal/natsCtl"
 )
 
 type App struct {
@@ -29,14 +29,14 @@ func NewApp(name string, version string) *App {
 
 // set nats in the context
 func (a *App) SetNatsContext(natsUrl string) error {
-	natsCtl, err := utils.NewNatsCtl(natsUrl)
+	natsCtl, err := natsCtl.NewNatsCtl(natsUrl)
 	a.SrvCtx = context.WithValue(a.SrvCtx, appContextKey("nats"), natsCtl)
 	return err
 }
 
-// an handler to get back natsCtl
-func (a *App) GetNatsConnection() *utils.NatsCtl {
-	return a.SrvCtx.Value(appContextKey("nats")).(*utils.NatsCtl)
+// handler to get back natsCtl
+func (a *App) GetNatsConnection() *natsCtl.NatsCtl {
+	return a.SrvCtx.Value(appContextKey("nats")).(*natsCtl.NatsCtl)
 }
 
 // start the nats subscribes

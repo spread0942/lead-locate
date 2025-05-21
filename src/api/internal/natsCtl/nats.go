@@ -1,12 +1,10 @@
-package utils
+package natsCtl
 
 import (
-	"time"
 	"encoding/json"
+	"time"
 
 	"github.com/nats-io/nats.go"
-
-	"api/internal/utils/natsUtils"
 )
 
 type NatsCtl struct {
@@ -31,9 +29,9 @@ func NewNatsCtl(url string) (*NatsCtl, error) {
 }
 
 // handle the request and response
-func (nats *NatsCtl) Request(subj string, method string, body any) (any, error) {
+func (nats *NatsCtl) Request(subj string, method string, body any) ([]byte, error) {
 	// prepare the request
-	req := natsUtils.NatsRequest{
+	req := NatsRequest{
 		Method: method,
 		Timestamp: time.Now(),
 		Body: body,
@@ -47,7 +45,7 @@ func (nats *NatsCtl) Request(subj string, method string, body any) (any, error) 
 		return nil, err
 	}
 	// elaborate the response
-	resp := &natsUtils.NatsResponse{}
+	resp := &NatsResponse{}
 	err = json.Unmarshal(reply.Data, resp)
 	if err != nil {
 		return nil, err
@@ -55,5 +53,9 @@ func (nats *NatsCtl) Request(subj string, method string, body any) (any, error) 
 	if resp.Status != 0 {
 		return nil, resp.Error
 	}
-	return resp.Body, nil
+	bodyReplay, err := json.Marshal(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return bodyReplay, nil
 }

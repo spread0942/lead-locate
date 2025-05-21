@@ -10,8 +10,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/temoto/robotstxt"
-
-	"gowler/internal/utils"
 )
 
 type Gowler struct {
@@ -53,7 +51,7 @@ func NewGowler(site string) *Gowler {
 func (entity *Gowler) Crawl() {
 	_, err := entity.getRobotData()
 	if err != nil {
-		log.Println(utils.ColorRed, err, utils.ColorReset)
+		log.Println(ColorRed, err, ColorReset)
 	}
 	entity.wg.Add(1)
 	go entity.gowler(entity.Site)
@@ -69,10 +67,10 @@ func (entity *Gowler) gowler(urlToScrape string) {
 		<-entity.sem
 	}()
 
-	log.Println(utils.ColorGreen, "Scraping site:", urlToScrape, utils.ColorReset)
+	log.Println(ColorGreen, "Scraping site:", urlToScrape, ColorReset)
 	req, err := http.NewRequest("GET", urlToScrape, nil)
 	if err != nil {
-		log.Println(utils.ColorRed, err, utils.ColorReset)
+		log.Println(ColorRed, err, ColorReset)
 		return
 	}
 	req.Header.Set("User-Agent", entity.UserAgents)
@@ -82,7 +80,7 @@ func (entity *Gowler) gowler(urlToScrape string) {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println(utils.ColorRed, err, utils.ColorReset)
+		log.Println(ColorRed, err, ColorReset)
 		return
 	}
 	defer resp.Body.Close()
@@ -90,7 +88,7 @@ func (entity *Gowler) gowler(urlToScrape string) {
 	if resp.StatusCode == 200 {
 		doc, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
-			log.Println(utils.ColorRed, err, utils.ColorReset)
+			log.Println(ColorRed, err, ColorReset)
 			return
 		}
 
@@ -112,15 +110,15 @@ func (entity *Gowler) gowler(urlToScrape string) {
 				} else {
 					u, err := url.Parse(link)
 					if err != nil {
-						log.Println(utils.ColorRed, err, utils.ColorReset)
+						log.Println(ColorRed, err, ColorReset)
 						return
 					}
 					if !u.IsAbs() {
 						u = resp.Request.URL.ResolveReference(u)
-						log.Println(utils.ColorYellow, "Relative URL resolved to:", u.String(), utils.ColorReset)
+						log.Println(ColorYellow, "Relative URL resolved to:", u.String(), ColorReset)
 					}
 					if !entity.robotsData.TestAgent(entity.UserAgents, u.Path) {
-						log.Println(utils.ColorYellow, "URL disallowed by robots.txt:", u.String(), utils.ColorReset)
+						log.Println(ColorYellow, "URL disallowed by robots.txt:", u.String(), ColorReset)
 						return
 					}
 					domain := u.Hostname()
@@ -128,7 +126,7 @@ func (entity *Gowler) gowler(urlToScrape string) {
 						entity.addSiteUrl(link)
 						entity.wg.Add(1)
 						go entity.gowler(link)
-						log.Println(utils.ColorBlue, "Active Goroutines:", len(entity.sem), utils.ColorReset)
+						log.Println(ColorBlue, "Active Goroutines:", len(entity.sem), ColorReset)
 					} else if domain != entity.Domain && !siteInSlice(link, entity.OtherUrls) {
 						entity.addOtherUrl(link)
 					}
@@ -139,7 +137,7 @@ func (entity *Gowler) gowler(urlToScrape string) {
 		doc.Find("body").Each(func(i int, s *goquery.Selection) {
 			html, err := s.Html()
 			if err != nil {
-				log.Println(utils.ColorRed, err, utils.ColorReset)
+				log.Println(ColorRed, err, ColorReset)
 				return
 			}
 			// Email regex
@@ -167,7 +165,7 @@ func (entity *Gowler) gowler(urlToScrape string) {
 			}
 		})
 	} else {
-		log.Printf(utils.ColorYellow + "Site %s returned status code %d" +  utils.ColorReset, urlToScrape, resp.StatusCode)
+		log.Printf(ColorYellow + "Site %s returned status code %d" +  ColorReset, urlToScrape, resp.StatusCode)
 	}
 }
 

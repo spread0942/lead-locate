@@ -7,36 +7,50 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-	"api/internal/utils"
+	"api/internal/natsCtl"
 )
 
 type GowlerInput struct {
 	Website string `query:"website" maxLength:"30" example:"https://www.google.com" doc:"Website to crawl"`
 }
 
-type GowlerOutput struct {
-	Body struct {
-		Site       string   `json:"site"`
-		Domain     string   `json:"domain"`
-		SiteUrls   []string `json:"siteUrls"`
-		OtherUrls  []string `json:"otherUrls"`
-		Telephones []string `json:"telephones"`
-		Emails     []string `json:"emails"`
-	} `json:"body"`
+type GowlerReplyBody struct {
+	Site string `json:"site"`
+	Domain string `json:"domain"`
+	SiteUrls []string `json:"siteUrls"`
+	OtherUrls []string `json:"otherUrls"`
+	Telephones []string `json:"telephones"`
+	Emails []string `json:"emails"`
 }
 
 type GowlerBodyRequest struct {
 	Website string `json:"website"`
 }
 
-func RegisterGowler(api huma.API, nats *utils.NatsCtl) {
+type ApiResponse struct {
+	Body struct {
+		Site string `json:"site"`
+		Domain string `json:"domain"`
+		SiteUrls []string `json:"siteUrls"`
+		OtherUrls []string `json:"otherUrls"`
+		Telephones []string `json:"telephones"`
+		Emails []string `json:"emails"`
+	}
+}
+
+func RegisterGowler(api huma.API, nats *natsCtl.NatsCtl) {
 	huma.Register(api, huma.Operation{
 		OperationID: "gowler",
 		Summary:     "Crawler a website",
 		Method:      http.MethodGet,
 		Path:        "/gowler",
-	}, func(ctx context.Context, input *GowlerInput) (*GowlerOutput, error) {
-		resp := &GowlerOutput{}
+		Description: "Crawl a website and return the results",
+		Tags:        []string{"Gowler"},
+	}, func(ctx context.Context, input *GowlerInput) (*ApiResponse, error) {
+		if input.Website == "" {
+			return nil, huma.NewError(http.StatusBadRequest, "missing website parameter")
+		}
+		reply := &GowlerReplyBody{}
 		body := GowlerBodyRequest{
 			Website: input.Website,
 		}
@@ -44,11 +58,17 @@ func RegisterGowler(api huma.API, nats *utils.NatsCtl) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 		}
-		jsonData, err := json.Marshal(data)
-		err = json.Unmarshal(jsonData, &resp)
+		err = json.Unmarshal(data, &reply)
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal to GowlerOutput: %w", err)
 		}
+		resp := &ApiResponse{}
+		resp.Body.Site = reply.Site
+		resp.Body.Domain = reply.Domain
+		resp.Body.SiteUrls = reply.SiteUrls
+		resp.Body.OtherUrls = reply.OtherUrls
+		resp.Body.Telephones = reply.Telephones
+		resp.Body.Emails = reply.Emails
 		return resp, nil
 	})
 }

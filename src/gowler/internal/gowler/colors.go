@@ -1,4 +1,4 @@
-package utils
+package gowler
 
 const (
 	ColorReset  = "\033[0m"

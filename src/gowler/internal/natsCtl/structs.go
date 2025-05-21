@@ -1,4 +1,4 @@
-package natsUtils
+package natsCtl
 
 import (
 	"time"
@@ -23,4 +23,13 @@ type NatsResponse struct {
 
 type GowlerBody struct {
 	Website string `json:"website"`
+}
+
+type GowlerReplyBody struct {
+	Site string `json:"site"`
+	Domain string `json:"domain"`
+	SiteUrls []string `json:"siteUrls"`
+	OtherUrls []string `json:"otherUrls"`
+	Telephones []string `json:"telephones"`
+	Emails []string `json:"emails"`
 }

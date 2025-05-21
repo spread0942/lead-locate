@@ -1,4 +1,4 @@
-package natsUtils
+package natsCtl
 
 import (
 	"time"

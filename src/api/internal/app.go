@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"api/internal/utils"
+	"api/internal/natsCtl"
 )
 
 type App struct {
@@ -27,13 +27,13 @@ func NewApp(name string, version string) *App {
 }
 
 func (a *App) SetNatsContext(natsUrl string) error {
-	natsCtl, err := utils.NewNatsCtl(natsUrl)
+	natsCtl, err := natsCtl.NewNatsCtl(natsUrl)
 	a.SrvCtx = context.WithValue(a.SrvCtx, appContextKey("nats"), natsCtl)
 	return err
 }
 
-func (a *App) GetNatsConnection() *utils.NatsCtl {
-	return a.SrvCtx.Value(appContextKey("nats")).(*utils.NatsCtl)
+func (a *App) GetNatsConnection() *natsCtl.NatsCtl {
+	return a.SrvCtx.Value(appContextKey("nats")).(*natsCtl.NatsCtl)
 }
 
 func (a *App) StartApiServer(apiUrl string) {
