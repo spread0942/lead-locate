@@ -11,7 +11,7 @@ import (
 )
 
 type GowlerInput struct {
-	Website string `query:"website" maxLength:"30" example:"https://www.google.com" doc:"Website to crawl"`
+	Website string `query:"website" maxLength:"30" example:"https://www.google.com" doc:"Website to crawl" required:"true"`
 }
 
 type GowlerReplyBody struct {
@@ -50,7 +50,6 @@ func RegisterGowler(api huma.API, nats *natsCtl.NatsCtl) {
 		if input.Website == "" {
 			return nil, huma.NewError(http.StatusBadRequest, "missing website parameter")
 		}
-		reply := &GowlerReplyBody{}
 		body := GowlerBodyRequest{
 			Website: input.Website,
 		}
@@ -58,6 +57,7 @@ func RegisterGowler(api huma.API, nats *natsCtl.NatsCtl) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 		}
+		reply := &GowlerReplyBody{}
 		err = json.Unmarshal(data, &reply)
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal to GowlerOutput: %w", err)

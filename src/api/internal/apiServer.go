@@ -22,7 +22,7 @@ func StartApiServer(a App, apiUrl string) {
 	nats := a.GetNatsConnection()
 
 	api.RegisterGowler(humaApi, nats)
-	// api.RegisterMaps(humaApi, nats)
+	api.RegisterMaps(humaApi, nats)
 
 	http.ListenAndServe(apiUrl, router)
 }

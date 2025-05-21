@@ -46,7 +46,7 @@ func (nats *NatsCtl) Request(subj string, method string, body any) ([]byte, erro
 	}
 	// elaborate the response
 	resp := &NatsResponse{}
-	err = json.Unmarshal(reply.Data, resp)
+	err = json.Unmarshal(reply.Data, &resp)
 	if err != nil {
 		return nil, err
 	}
